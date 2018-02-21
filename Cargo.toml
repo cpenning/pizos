@@ -1,0 +1,9 @@
+[package]
+name = "pirustbarecpuid"
+version = "0.1.0"
+authors = ["Craig Pennington <cpenning@milo.org>"]
+
+[dependencies]
+
+[profile.dev]
+panic = "abort"
