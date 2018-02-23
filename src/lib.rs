@@ -34,6 +34,7 @@ pub extern fn notmain() {
         hw.uart_send(c);
         hw.uart_send(0x0A);
         hw.uart_send(0x0D);
+        hw.hexstring(c);
     }
 }
 
