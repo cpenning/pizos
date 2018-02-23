@@ -11,15 +11,36 @@ pub fn get_hw() -> Hardware {
     unsafe {
         id = GETCPUID();
     }
+    let pbase: u32 = get_pbase(id);
     Hardware {
         id: id,
-        pbase: get_pbase(id)
+        pbase: pbase,
+        gpfsel1: pbase | Hardware::GPFSEL1,
+        aux_enables: pbase | Hardware::AUX_ENABLES,
+        aux_mu_io_reg: pbase | Hardware::AUX_MU_IO_REG,
+        aux_mu_ier_reg: pbase | Hardware::AUX_MU_IER_REG,
+        aux_mu_iir_reg: pbase | Hardware::AUX_MU_IIR_REG,
+        aux_mu_lcr_reg: pbase | Hardware::AUX_MU_LCR_REG,
+        aux_mu_mcr_reg: pbase | Hardware::AUX_MU_MCR_REG,
+        aux_mu_lsr_reg: pbase | Hardware::AUX_MU_LSR_REG,
+        aux_mu_cntl_reg: pbase | Hardware::AUX_MU_CNTL_REG,
+        aux_mu_baud_reg: pbase | Hardware::AUX_MU_BAUD_REG
     }
 }
 
 pub struct Hardware {
     id: u32,
-    pbase: u32
+    pbase: u32,
+    gpfsel1: u32,
+    aux_enables: u32,
+    aux_mu_io_reg: u32,
+    aux_mu_ier_reg: u32,
+    aux_mu_iir_reg: u32,
+    aux_mu_lcr_reg: u32,
+    aux_mu_mcr_reg: u32,
+    aux_mu_lsr_reg: u32,
+    aux_mu_cntl_reg: u32,
+    aux_mu_baud_reg: u32
 }
 
 // Get the pbase from the cpuid
@@ -33,10 +54,10 @@ fn get_pbase(id: u32) -> u32 {
 impl Hardware {
     // Offsets from pbase
     const GPFSEL1: u32         = 0x00200004;
-    const GPSET0: u32          = 0x0020001C;
-    const GPCLR0: u32          = 0x00200028;
-    const UART_DR: u32         = 0x00201000;
-    const UART_FR: u32         = 0x00201018;
+    //const GPSET0: u32          = 0x0020001C;
+    //const GPCLR0: u32          = 0x00200028;
+    //const UART_DR: u32         = 0x00201000;
+    //const UART_FR: u32         = 0x00201018;
     const AUX_ENABLES: u32     = 0x00215004;
     const AUX_MU_IO_REG: u32   = 0x00215040;
     const AUX_MU_IER_REG: u32  = 0x00215044;
@@ -44,10 +65,10 @@ impl Hardware {
     const AUX_MU_LCR_REG: u32  = 0x0021504C;
     const AUX_MU_MCR_REG: u32  = 0x00215050;
     const AUX_MU_LSR_REG: u32  = 0x00215054;
-    const AUX_MU_MSR_REG: u32  = 0x00215058;
-    const AUX_MU_SCRATCH: u32  = 0x0021505C;
+    //const AUX_MU_MSR_REG: u32  = 0x00215058;
+    //const AUX_MU_SCRATCH: u32  = 0x0021505C;
     const AUX_MU_CNTL_REG: u32 = 0x00215060;
-    const AUX_MU_STAT_REG: u32 = 0x00215064;
+    //const AUX_MU_STAT_REG: u32 = 0x00215064;
     const AUX_MU_BAUD_REG: u32 = 0x00215068;
 
     pub const PI1: &'static str = "Raspberry Pi 1/zero\r\n";
@@ -58,12 +79,12 @@ impl Hardware {
     pub fn uart_send(&self, c: u32) {
         unsafe {
             loop {
-                let chk: u32 = GET32(self.pbase + Hardware::AUX_MU_LSR_REG)&0x20;
+                let chk: u32 = GET32(self.aux_mu_lsr_reg)&0x20;
                 if chk != 0 {
                     break;
                 }
             }
-            PUT32(self.pbase + Hardware::AUX_MU_IO_REG,c);
+            PUT32(self.aux_mu_io_reg,c);
         }
     }
 
@@ -71,14 +92,14 @@ impl Hardware {
         loop {
             let chk: u32;
             unsafe {
-                chk = GET32(self.pbase + Hardware::AUX_MU_LSR_REG)&0x01;
+                chk = GET32(self.aux_mu_lsr_reg)&0x01;
             }
     	    if chk > 0 {
                 break;
             }
         }
         unsafe {
-			GET32(self.pbase + Hardware::AUX_MU_IO_REG)
+			GET32(self.aux_mu_io_reg)
         }
 	}
 
@@ -113,15 +134,15 @@ impl Hardware {
         let mut ra: u32;
 
         unsafe {
-            PUT32(self.pbase + Hardware::AUX_ENABLES,1);
-            PUT32(self.pbase + Hardware::AUX_MU_IER_REG,0);
-            PUT32(self.pbase + Hardware::AUX_MU_CNTL_REG,0);
-            PUT32(self.pbase + Hardware::AUX_MU_LCR_REG,3);
-            PUT32(self.pbase + Hardware::AUX_MU_MCR_REG,0);
-            PUT32(self.pbase + Hardware::AUX_MU_IER_REG,0);
-            PUT32(self.pbase + Hardware::AUX_MU_IIR_REG,0xC6);
-            PUT32(self.pbase + Hardware::AUX_MU_BAUD_REG,270);
-            ra = GET32(self.pbase + Hardware::GPFSEL1);
+            PUT32(self.aux_enables,1);
+            PUT32(self.aux_mu_ier_reg,0);
+            PUT32(self.aux_mu_cntl_reg,0);
+            PUT32(self.aux_mu_lcr_reg,3);
+            PUT32(self.aux_mu_mcr_reg,0);
+            PUT32(self.aux_mu_ier_reg,0);
+            PUT32(self.aux_mu_iir_reg,0xC6);
+            PUT32(self.aux_mu_baud_reg,270);
+            ra = GET32(self.gpfsel1);
         }
 
         ra&=!(7<<12); //gpio14
@@ -130,8 +151,8 @@ impl Hardware {
         ra|=2<<15;    //alt5
 
         unsafe {
-            PUT32(self.pbase + Hardware::GPFSEL1,ra);
-            PUT32(self.pbase + Hardware::AUX_MU_CNTL_REG,3);
+            PUT32(self.gpfsel1,ra);
+            PUT32(self.aux_mu_cntl_reg,3);
         }
     }
 

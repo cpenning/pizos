@@ -12,14 +12,14 @@ all : kernel.img
 boot.o: boot.S
 	$(AS) boot.S -o boot.o
 
-target/arm-none-eabihf/debug/libPiZOS.rlib: src/lib.rs src/hal/mod.rs arm-none-eabihf.json
+target/arm-none-eabihf/debug/libpizos.rlib: src/lib.rs src/hal/mod.rs arm-none-eabihf.json
 	xargo build --target arm-none-eabihf
 
 clean:
-	rm -vf target/arm-none-eabihf/debug/libPiZOS.rlib boot.o kernel.elf kernel.img kernel.hex kernel.list
+	rm -vf target/arm-none-eabihf/debug/libpizos.rlib boot.o kernel.elf kernel.img kernel.hex kernel.list
 
-kernel.img : loader boot.o target/arm-none-eabihf/debug/libPiZOS.rlib
-	$(LD) boot.o target/arm-none-eabihf/debug/libPiZOS.rlib -T loader -o kernel.elf
+kernel.img : loader boot.o target/arm-none-eabihf/debug/libpizos.rlib
+	$(LD) boot.o target/arm-none-eabihf/debug/libpizos.rlib -T loader -o kernel.elf
 	$(OD) -D kernel.elf > kernel.list
 	$(OC) kernel.elf -O ihex kernel.hex
 	$(OC) kernel.elf -O binary kernel.img
