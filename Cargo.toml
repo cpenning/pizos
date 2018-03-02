@@ -4,6 +4,15 @@ version = "0.1.0"
 authors = ["Craig Pennington <cpenning@milo.org>"]
 
 [dependencies]
+fixedvec = "*"
+compiler_builtins = { git = "https://github.com/rust-lang-nursery/compiler-builtins" }
+rlibc = "*"
+
+[lib]
+crate-type = ["staticlib"]
 
 [profile.dev]
+panic = "abort"
+
+[profile.release]
 panic = "abort"

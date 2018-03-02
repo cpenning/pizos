@@ -1,7 +1,7 @@
 
 MEMORY
 {
-    ram : ORIGIN = 0x8000, LENGTH = 0x3000
+    ram : ORIGIN = 0x00008000, LENGTH = 0x00004000
 }
 
 SECTIONS
@@ -12,3 +12,4 @@ SECTIONS
     .bss : { *(.bss*) } > ram
 }
 
+ENTRY(_start)

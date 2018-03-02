@@ -3,7 +3,6 @@ extern {
     fn GET32 (x: u32) -> u32;
     fn GETPC () -> u32;
     fn GETCPUID() -> u32;
-    fn dummy (x: u32);
 }
 
 pub fn get_hw() -> Hardware {
@@ -159,6 +158,15 @@ impl Hardware {
     pub fn send_string (&self,s: &str) {
         for c in s.chars() {
             self.uart_send(c as u32);
+        }
+    }
+
+    pub fn send_hwstr(&self) {
+        match self.id {
+            0x410FB767 => self.send_string(Hardware::PI1),
+            0x410FC075 => self.send_string(Hardware::PI2),
+            0x410FD034 => self.send_string(Hardware::PI3),
+            _ => self.send_string(Hardware::UNK)
         }
     }
 
